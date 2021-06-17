@@ -1,0 +1,35 @@
+---
+
+- name: Intall Filebeat Playbook
+  hosts: webservers
+  become: true
+  tasks:
+
+  - name: Install Filebeat
+    apt:
+      deb: https://artifacts.elastic.co/downloads/beats/filebeat/filebeat-7.6.2-amd64.deb
+      state: present
+
+  - name: Copy filebeat.yml to webserver using local copy
+    ansible.builtin.copy:
+      src: /etc/ansible/files/filebeat-config.yml
+      dest: /etc/filebeat/filebeat.yml
+      force: yes
+      owner: root
+      group: root
+      mode: 0444
+
+  - name: Run filebeat modules enable system
+    ansible.builtin.command: filebeat modules enable system
+
+  - name: Run filebeat setup
+    ansible.builtin.command: filebeat setup
+
+  - name: Start filebeat service
+    ansible.builtin.command: /etc/init.d/filebeat start
+
+  - name: Configure systemd to start filebeat.service when VM starts
+    systemd:
+      name: filebeat.service
+      enabled: yes
+      state: started

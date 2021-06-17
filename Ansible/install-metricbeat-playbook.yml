@@ -1,0 +1,35 @@
+---
+
+- name: Intall Metricbeat Playbook
+  hosts: webservers
+  become: true
+  tasks:
+
+  - name: Install Metricbeat
+    apt:
+      deb: https://artifacts.elastic.co/downloads/beats/metricbeat/metricbeat-7.6.1-amd64.deb
+      state: present
+
+  - name: Copy metricbeat.yml to webserver using local copy
+    ansible.builtin.copy:
+      src: /etc/ansible/files/metricbeat-config.yml
+      dest: /etc/metricbeat/metricbeat.yml
+      force: yes
+      owner: root
+      group: root
+      mode: 0444
+
+  - name: Run metricbeat modules enable docker
+    ansible.builtin.command: metricbeat modules enable docker
+
+  - name: Run metricbeat setup
+    ansible.builtin.command: metricbeat setup
+
+  - name: Start metricbeat
+    ansible.builtin.command: /etc/init.d/metricbeat start
+
+  - name: Configure systemd to start metricbeat.service when VM starts
+    systemd:
+      name: metricbeat.service
+      state: started
+      enabled: yes
